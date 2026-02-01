@@ -8,7 +8,7 @@ from gym.utils import seeding
 
 #   以v in [0,1],theta in [-1,1]为动作
 if sys.version_info.major == 2:
-    import Tkinter as tk
+    import tkinter as tk
 else:
     import tkinter as tk
 '''
@@ -57,8 +57,8 @@ class UAV(tk.Tk, object):
         self.Y_min = 0
         self.X_max = (WIDTH) * UNIT
         self.Y_max = (HEIGHT) * UNIT  # 地图边界
-        self.R_dc = R_dc  # 水平覆盖距离 10m
-        self.R_eh = R_eh  # 水平覆盖距离 30m
+        self.R_dc = R_dc  # 数据收集的最大覆盖距离 10m
+        self.R_eh = R_eh  # 能量传输的最大覆盖距离 30m
         self.sdc = math.sqrt(pow(self.R_dc, 2) + pow(self.H, 2))  # 最大DC服务距离
         self.seh = math.sqrt(pow(self.R_eh, 2) + pow(self.H, 2))  # 最大EH服务距离
         self.noise = pow(10, -12)  # 噪声功率为-90dbm

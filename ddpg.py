@@ -89,8 +89,9 @@ class AGENT(object):
         # 建立ema，滑动平均值
         self.ema = tf.train.ExponentialMovingAverage(decay=1 - args.replace_tau)  # soft replacement
 
-        self.actor_opt = tf.optimizers.Adam(lr=args.lr_actor)
-        self.critic_opt = tf.optimizers.Adam(lr=args.lr_critic)
+        self.actor_opt = tf.optimizers.Adam(learning_rate=args.lr_actor)
+        self.critic_opt = tf.optimizers.Adam(learning_rate=args.lr_critic)
+
 
     def ema_update(self):
         """

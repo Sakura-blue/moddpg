@@ -8,6 +8,7 @@ import numpy as np
 import argparse
 import tensorflow as tf
 
+#  super parameters
 parser = argparse.ArgumentParser(description='Train the DDPG model.')
 parser.add_argument('--is_train', type=int, default=1, metavar='train(1) or eval(0)',
                     help='train model of evaluate the trained model')
@@ -337,7 +338,7 @@ if __name__ == '__main__':
         #####################################################################
         '''
         # 画图
-        1、累积奖励Accumulated reward，2、回合收集数据量 sum rate 3、 平均每次悬停收集数据量 data rate
+        1、累积奖励Accumulated reward   2、回合收集数据量 sum rate   3、平均每次悬停收集数据量 data rate
         4、 回合总收集能量harvested energy  5、平均每次悬停收集能量Average harvested energy
         6、回合平均每步飞行能耗 fly energy consumption  7、上传数据用户数 The number of ID user 
         8、总充电用户数 The number of EH user 9、平均每次悬停充电用户数 Average number of EH user 
