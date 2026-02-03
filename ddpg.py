@@ -11,7 +11,7 @@ class AGENT(object):
     """
 
     def __init__(self, args, a_num, a_dim, s_dim, a_bound, is_train):
-        self.memory = np.zeros((args.mem_size, s_dim * 2 + a_dim + 1), dtype=np.float32)
+        self.memory = np.zeros((args.mem_size, s_dim * 2 + a_dim + 1), dtype=np.float32)  #共8000行经验，每行经验 = [s, a, r, s_]
         self.pointer = 0
         self.mem_size = args.mem_size
         self.batch_size = args.batch_size
@@ -87,7 +87,7 @@ class AGENT(object):
         self.critic_target.eval()
 
         # 建立ema，滑动平均值
-        self.ema = tf.train.ExponentialMovingAverage(decay=1 - args.replace_tau)  # soft replacement
+        self.ema = tf.compat.v1.train.ExponentialMovingAverage(decay=1 - args.replace_tau)  # soft replacement
 
         self.actor_opt = tf.optimizers.Adam(learning_rate=args.lr_actor)
         self.critic_opt = tf.optimizers.Adam(learning_rate=args.lr_critic)
@@ -114,9 +114,9 @@ class AGENT(object):
         :param s: state
         :return: act
         """
-        s = np.array([s], dtype=np.float32)
+        s = np.array([s], dtype=np.float32) # 添加一个维度，变成[1, s_dim]，因为actor网络输入要求是二维的
         a = self.actor(s)
-        return a.numpy().squeeze()
+        return a.numpy().squeeze()          # 去掉多余的维度，变成[a_dim, ]
 
     def learn(self):
         indices = np.random.choice(self.mem_size, size=self.batch_size)  # 随机BATCH_SIZE个随机数
@@ -136,7 +136,7 @@ class AGENT(object):
             q_ = self.critic_target([bs_, a_])
             y = br + self.gamma * q_
             q = self.critic([bs, ba])
-            td_error = tf.losses.mean_squared_error(tf.reshape(y, [-1]), tf.reshape(q, [-1]))
+            td_error = tf.reduce_mean(tf.square(y - q))
         c_grads = tape.gradient(td_error, self.critic.trainable_weights)
         self.critic_opt.apply_gradients(zip(c_grads, self.critic.trainable_weights))
 

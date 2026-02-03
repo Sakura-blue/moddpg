@@ -14,7 +14,7 @@ else:
 '''
 地图大小为400*400
 无人机数量N_UAV=1
-服务点数量为100，所有服务点在限定区域内随机分布，服务点具有不同数据收集特性
+服务点数量为100  所有服务点在限定区域内随机分布  服务点具有不同数据收集特性
 固定地图
 '''
 WIDTH = 10  # 地图的宽度
@@ -27,9 +27,9 @@ P_u = pow(10, -5)  # 传感器的发射功率 0.01mW,-20dbm
 P_d = 10  # 无人机下行发射功率 10W,40dBm
 H = 10.  # 无人机固定悬停高度 10m
 R_d = 30.  # 无人机充电覆盖范围 10m能接受到0.1mW,30m能接收到0.01mW
-N_S_ = 100  # 设备个数
+N_S_ = 100  # IOT设备个数
 V = 20  # 无人机最大速度 20m/s
-b_S_ = np.random.randint(0, 500, N_S_)  # 初始化传感器当前数据缓存量
+b_S_ = np.random.randint(0, 500, N_S_)  # 初始化传感器当前数据缓存量,输出b_S_是一个长度为N_S_的数组,每个元素取值范围为0-500
 
 # 非线性能量接收机模型
 Mj = 9.079 * pow(10, -6)
@@ -37,7 +37,10 @@ aj = 47083
 bj = 2.9 * pow(10, -6)
 Oj = 1 / (1 + math.exp(aj * bj))
 
-np.random.seed(1)
+np.random.seed(1)  # 设置随机种子为1，保证每次运行结果一致
+
+
+
 
 
 # 定义无人机类
@@ -59,18 +62,18 @@ class UAV(tk.Tk, object):
         self.Y_max = (HEIGHT) * UNIT  # 地图边界
         self.R_dc = R_dc  # 数据收集的最大覆盖距离 10m
         self.R_eh = R_eh  # 能量传输的最大覆盖距离 30m
-        self.sdc = math.sqrt(pow(self.R_dc, 2) + pow(self.H, 2))  # 最大DC服务距离
+        self.sdc = math.sqrt(pow(self.R_dc, 2) + pow(self.H, 2))  # 最大DC服务距离（勾股定理得斜距）
         self.seh = math.sqrt(pow(self.R_eh, 2) + pow(self.H, 2))  # 最大EH服务距离
         self.noise = pow(10, -12)  # 噪声功率为-90dbm
-        self.AutoUAV = []
-        self.Aim = []
+        self.AutoUAV = []  # 无人机
+        self.Aim = []   # 目标用户
         self.N_AIM = 1  # 选择服务的用户数
-        self.FX = 0.
+        self.FX = 0.    # 无人机越界计数
         self.SoPcenter = np.random.randint(10, 390, size=[self.N_POI, 2])
         #   以 v in [0,1],theta in [-1,1]为动作
         self.action_space = spaces.Box(low=np.array([0., -1.]), high=np.array([1., 1.]),
                                        dtype=np.float32)
-        self.state_dim = 6  # 状态空间为最高优先级用户位置与无人机的相对位置，无人机位置，是否撞墙，数据溢出数
+        self.state_dim = 6  # 状态空间为最高优先级用户位置与无人机的相对位置，无人机位置，是否撞墙，数据溢出数，共六维
         self.state = np.zeros(self.state_dim)
         self.xy = np.zeros((self.N_UAV, 2))  # 无人机位置
 
@@ -82,15 +85,15 @@ class UAV(tk.Tk, object):
         self.N_Data_overflow = 0  # 数据溢出计数
         self.Q = np.array(
             [self.lda[i] * self.b_S[i] / self.Fully_buffer for i in range(self.N_POI)])  # 数据收集优先级
-        self.idx_target = np.argmax(self.Q)
-        self.updata = self.b_S[self.idx_target] / self.Fully_buffer
+        self.idx_target = np.argmax(self.Q)     #返回优先级最高的传感器索引
+        self.updata = self.b_S[self.idx_target] / self.Fully_buffer   # 最高优先级传感器缓存数据占比
         '''
         # 指定一块区域环境对传感器有影响
         for i in range(self.N_POI):
             if all(self.SoPcenter[i] >= [120, 120]) and all(self.SoPcenter[i] <= [280, 280]):
                 self.lda[i] += 3.
         '''
-
+######################创建UI界面########################
         self.title('MAP')
         self.geometry('{0}x{1}'.format(WIDTH * UNIT, HEIGHT * UNIT))  # Tkinter 的几何形状
         self.build_maze()
@@ -143,7 +146,7 @@ class UAV(tk.Tk, object):
                 fill='yellow')
             self.AutoUAV.append(L_UAV)
 
-        # 用户选择
+        # 目标设备用户选择
         pxy = self.SoPcenter[np.argmax(self.Q)]
         L_AIM = self.canvas.create_rectangle(
             pxy[0] - 10, pxy[1] - 10,
@@ -151,11 +154,16 @@ class UAV(tk.Tk, object):
             fill='red')
         self.Aim.append(L_AIM)
 
-        self.canvas.pack()
+        self.canvas.pack()  #显示画布
+
+
+
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
+
+
 
     # 重置，随机初始化无人机的位置
     def reset(self):
@@ -177,6 +185,7 @@ class UAV(tk.Tk, object):
             self.AutoUAV.append(L_UAV)
         self.FX = 0.
 
+
         self.b_S = np.random.randint(0, 500, self.N_POI)  # 初始化传感器当前数据缓存量
         self.b_S = np.asarray(self.b_S, dtype=np.float32)
         self.N_Data_overflow = 0  # 数据溢出计数
@@ -193,9 +202,12 @@ class UAV(tk.Tk, object):
             fill='red')
         self.Aim.append(L_AIM)
 
-        self.state = np.concatenate(((self.pxy - self.xy[0]).flatten() / 400., self.xy.flatten() / 400., [0., 0.]))
+        #初始化六维状态值
+        self.state = np.concatenate(((self.pxy - self.xy[0]).flatten() / 400.,  self.xy.flatten() / 400.,  [0., 0.])) 
 
         return self.state
+
+
 
     # 传入当前状态和输入动作输出下一个状态和奖励
     def step_move(self, action, above=False):
@@ -204,10 +216,11 @@ class UAV(tk.Tk, object):
             detY = action[self.N_UAV:] * self.max_speed
         else:
             detX = action[0] * self.max_speed * math.cos(action[1] * math.pi)
-            detY = action[0] * self.max_speed * math.sin(action[1] * math.pi)
+            detY = action[0] * self.max_speed * math.sin(action[1] * math.pi) 
+
         state_ = np.zeros(self.state_dim)
         xy_ = copy.deepcopy(self.xy)  # 位置更新
-        Flag = False  # 无人机是否飞行标识
+        Flag = False  # 无人机是否成功执行本次飞行标识
         for i in range(self.N_UAV):  # 无人机位置更新
             xy_[i][0] += detX
             xy_[i][1] += detY

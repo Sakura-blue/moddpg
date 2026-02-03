@@ -44,21 +44,26 @@ parser.add_argument('--w_eh', type=float, default=100., metavar='W_EH',
 parser.add_argument('--w_ec', type=float, default=5., metavar='W_EC',
                     help='the weight of energy consumption')
 
-args = parser.parse_args()
+args = parser.parse_args()  #封装模型参数，变为一个对象args,之后可以通过args.属性名直接调用参数值
+
+
 
 #####################  set the save path  ####################
 model_path = '/{}/{}/'.format(args.model, 'models')
-path = os.getcwd() + model_path
+path = os.getcwd() + model_path                                       #os.getcwd()获取当前工作目录，即当前Python脚本工作的目录路径
 if not os.path.exists(path):
-    os.makedirs(path)
+    os.makedirs(path) 
+
 logs_path = '/{}/{}/'.format(args.model, 'logs')
 path = os.getcwd() + logs_path
 if not os.path.exists(path):
     os.makedirs(path)
+
 figs_path = '/{}/{}/'.format(args.model, 'figs')
 path = os.getcwd() + figs_path
 if not os.path.exists(path):
     os.makedirs(path)
+
 
 # 设置画图横纵坐标字体格式
 font1 = {'family': 'Times New Roman',
@@ -69,6 +74,7 @@ font2 = {'family': 'Times New Roman',
          'weight': 'normal',
          'size': 14,
          }
+
 Q = 10.
 V_ME = 10.
 V_max = 20.0
@@ -79,7 +85,7 @@ EC_grd = 178.
 def train():
     var = 2.  # control exploration
     for ep in range(args.episode_num):
-        s = env.reset()
+        s = env.reset()  #返回初始化状态
         ep_reward = 0
         idu = 0  # 服务用户计数
         N_DO = 0  # 每EPISODES平均数据溢出用户数
@@ -99,7 +105,7 @@ def train():
             ft = 1  # 飞行时间
             act = agent.choose_action(s)
             act = np.clip(np.random.normal(act, var), a_bound.low,
-                          a_bound.high)  # add randomness to action selection for exploration
+                          a_bound.high)  #利用var给动作添加高斯噪声进行探索，并利用clip限制在动作大小范围内
             s_, r, done, dr, cu, eh, ec = env.step_move(act)
             Ft += ft
             Ec += ec
@@ -186,7 +192,7 @@ if __name__ == '__main__':
     # 初始化环境
     env = UAV(args.R_dc, args.R_eh)
 
-    # reproducible，设置随机种子，为了能够重现
+    # reproducible，统一设置所有随机种子，为了能够重现
     env.seed(1)
     np.random.seed(1)
     tf.random.set_seed(1)
@@ -204,7 +210,9 @@ if __name__ == '__main__':
     # 用agent算法
     agent = AGENT(args, a_num, a_dim, s_dim, a_bound, True)
 
-    # 训练部分：
+
+
+    ############################## 训练部分：###################################
     t1 = time.time()
     plot_x = []
     plot_R = []  # 累计奖励
@@ -223,6 +231,13 @@ if __name__ == '__main__':
     file = open(os.path.join('.{}{}'.format(logs_path, 'log.txt')), 'w+')
     train()
     file.close
+
+
+
+
+
+
+
     #######################################1、累积奖励Accumulated reward##############################################
     # 画图
     fig = plt.figure(figsize=(8, 8))
