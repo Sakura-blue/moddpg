@@ -248,6 +248,7 @@ class UAV(tk.Tk, object):
         for i in range(self.N_UAV):
             self.canvas.move(self.AutoUAV[i], xy_[i][0] - self.xy[i][0], xy_[i][1] - self.xy[i][1])
 
+
         self.xy = xy_
         # 无人机位置更新后，判断服务点接受服务的情况
         self.N_Data_overflow = 0  # 记录每时隙数据溢出用户数
