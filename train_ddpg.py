@@ -6,7 +6,7 @@ import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import argparse
-import tensorflow as tf
+import torch
 
 parser = argparse.ArgumentParser(description='Train the DDPG model.')
 parser.add_argument('--is_train', type=int, default=1, metavar='train(1) or eval(0)',
@@ -188,7 +188,9 @@ if __name__ == '__main__':
     # reproducible，设置随机种子，为了能够重现
     env.seed(1)
     np.random.seed(1)
-    tf.random.set_seed(1)
+    torch.manual_seed(1)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(1)
 
     # 定义状态空间，动作空间，动作幅度范围
     s_dim = env.state_dim
